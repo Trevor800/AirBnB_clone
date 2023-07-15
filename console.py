@@ -18,7 +18,6 @@ from models.review import Review
 
 class HBNBCommand(cmd.Cmd):
     """The HBNB console"""
-    
     # The prompt
     prompt = '(hbnb) ' if sys.__stdin__.isatty() else ''
 
