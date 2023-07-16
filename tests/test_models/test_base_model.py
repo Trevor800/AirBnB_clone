@@ -1,22 +1,55 @@
 #!/usr/bin/python3
-"""Basemodel class """
-import uuid
-from datetime import datetime
+"""
+Defines the BaseModel class.
+"""
 import models
+from uuid import uuid4
+from datetime import datetime
 class BaseModel:
-    def __init__(self, **kwargs):
-        self.id = str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.updated_at = self.created_at
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-    def __str__(self):
-        return "[{}] ({}) {}".format(self.__class__.__name__, self.id, self.__dict__)
+    """Defines the BaseModel class.
+    Attributes:
+        id (str): The BaseModel id.
+        created_at (datetime): The datetime at creation.
+        updated_at (datetime): The datetime of last update.
+    """
+    def __init__(self, *args, **kwargs):
+        """Initialize a new BaseModel.
+        Args:
+            *args (any): Unused.
+            **kwargs (dict): Key/value pairs of attributes.
+        """
+        if kwargs:
+            for key, value in kwargs.items():
+                if key == "__class__":
+                    continue
+                if key == "created_at" or key == "updated_at":
+                    value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f")
+                setattr(self, key, value)
+        else:
+            self.id = str(uuid4())
+            self.created_at = datetime.utcnow()
+            self.updated_at = datetime.utcnow()
     def save(self):
-        self.updated_at = datetime.now()
+        """Update updated_at with the current datetime and save the instance."""
+        self.updated_at = datetime.utcnow()
+        models.storage.new(self)
+        models.storage.save()
     def to_dict(self):
-        obj_dict = self.__dict__.copy()
-        obj_dict['__class__'] = self.__class__.__name__
-        obj_dict['created_at'] = self.created_at.isoformat()
-        obj_dict['updated_at'] = self.updated_at.isoformat()
-        return obj_dict
+        """Return a dictionary representation of the BaseModel instance.
+        Includes the key/value pair __class__ representing
+        the class name of the object.
+        """
+        my_dict = self.__dict__.copy()
+        my_dict["__class__"] = str(type(self).__name__)
+        my_dict["created_at"] = self.created_at.isoformat()
+        my_dict["updated_at"] = self.updated_at.isoformat()
+        my_dict.pop("_sa_instance_state", None)
+        return my_dict
+    def delete(self):
+        """Delete the current instance from storage."""
+        models.storage.delete(self)
+    def __str__(self):
+        """Return the print/str representation of the BaseModel instance."""
+        d = self.__dict__.copy()
+        d.pop("_sa_instance_state", None)
+        return "[{}] ({}) {}".format(type(self).__name__, self.id, d)
