@@ -1,33 +1,72 @@
 #!/usr/bin/python3
-import uuid
-from datetime import datetime
-import models
+"""
+This is the base model unnittest
+"""
 
+import unittest
+from models.base_model import BaseModel
 
-class BaseModel:
-    def __init__(self, **kwargs):
-        self.id = str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.updated_at = self.created_at
+class TestBaseModel(unittest.TestCase):
 
-        if kwargs:
-            for key, value in kwargs.items():
-                if key == "__class__":
-                    continue
-                if key == "created_at" or key == "updated_at":
-                    value = datetime.strptime(value, "%Y-%m-%dT%H:%M:%S.%f")
-                setattr(self, key, value)
+    def test_init_with_arguments(self):
+        # Test initialization with arguments
+        data = {
+            "id": "12345",
+            "created_at": "2022-01-01T00:00:00",
+            "updated_at": "2022-01-01T00:00:00",
+            "name": "Test Model",
+            "my_number": 42
+        }
+        model = BaseModel(**data)
 
-    def __str__(self):
-        return "[{}] ({}) {}".format(self.__class__.__name__, self.id, self.__dict__)
+        self.assertEqual(model.id, "12345")
+        self.assertEqual(model.created_at.isoformat(), "2022-01-01T00:00:00")
+        self.assertEqual(model.updated_at.isoformat(), "2022-01-01T00:00:00")
+        self.assertEqual(model.name, "Test Model")
+        self.assertEqual(model.my_number, 42)
 
-    def save(self):
-        self.updated_at = datetime.now()
+    def test_init_without_arguments(self):
+        # Test initialization without arguments
+        model = BaseModel()
 
-    def to_dict(self):
-        obj_dict = self.__dict__.copy()
-        obj_dict['__class__'] = self.__class__.__name__
-        obj_dict['created_at'] = self.created_at.isoformat()
-        obj_dict['updated_at'] = self.updated_at.isoformat()
-        return obj_dict
+        self.assertIsInstance(model.id, str)
+        self.assertIsInstance(model.created_at, datetime)
+        self.assertIsInstance(model.updated_at, datetime)
 
+    def test_str_representation(self):
+        # Test __str__ representation
+        model = BaseModel()
+        model.name = "Test Model"
+        model.my_number = 42
+
+        expected_str = "[BaseModel] ({}) {}".format(model.id, model.__dict__)
+        self.assertEqual(str(model), expected_str)
+
+    def test_save(self):
+        # Test save method
+        model = BaseModel()
+        previous_updated_at = model.updated_at
+
+        # Modify the object and save it
+        model.name = "Modified Model"
+        model.save()
+
+        self.assertNotEqual(model.updated_at, previous_updated_at)
+
+    def test_to_dict(self):
+        # Test to_dict method
+        model = BaseModel()
+        model.name = "Test Model"
+        model.my_number = 42
+        model_dict = model.to_dict()
+
+        self.assertIsInstance(model_dict, dict)
+        self.assertEqual(model_dict["id"], model.id)
+        self.assertEqual(model_dict["created_at"], model.created_at.isoformat())
+        self.assertEqual(model_dict["updated_at"], model.updated_at.isoformat())
+        self.assertEqual(model_dict["name"], "Test Model")
+        self.assertEqual(model_dict["my_number"], 42)
+        self.assertEqual(model_dict["__class__"], "BaseModel")
+
+if __name__ == '__main__':
+    unittest.main()
