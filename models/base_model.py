@@ -28,3 +28,10 @@ def create_base_model(**kwargs):
     base_model['to_dict'] = to_dict
     
     return base_model
+
+# Example usage:
+my_model = create_base_model(custom_attr1='value1', custom_attr2='value2')
+print(my_model['__str__']())  # Output: "[BaseModel] (generated-uuid) {'id': 'generated-uuid', 'created_at': '2023-07-16T12:00:00.000000', 'updated_at': '2023-07-16T12:00:00.000000', 'custom_attr1': 'value1', 'custom_attr2': 'value2'}"
+my_model['save']()
+print(my_model['updated_at'])  # Output: "2023-07-16 12:01:00.000000"
+print(my_model['to_dict']())  # Output: "{'id': 'generated-uuid', 'created_at': '2023-07-16T12:00:00.000000', 'updated_at': '2023-07-16T12:01:00.000000', '__class__': 'BaseModel', 'custom_attr1': 'value1', 'custom_attr2': 'value2'}"
